@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="A chaotic leaky water wheel that maps its center of mass to HSV color.">
+    <title>Leaky Wheel Chroma Lab</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <h1>Leaky Wheel Chroma Lab</h1>
+          <p>A chaotic water wheel paints with its own center of mass.</p>
+        </div>
+        <div class="actions" role="group" aria-label="Simulation controls">
+          <button id="toggle-play" type="button">Play</button>
+          <button id="step-once" type="button">Step</button>
+          <button id="reset" type="button">Reset</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel simulation-panel" aria-labelledby="simulation-title">
+          <h2 id="simulation-title">Water wheel</h2>
+          <div class="canvas-frame">
+            <canvas id="wheel-canvas" role="img" aria-label="Leaky water wheel simulation with center-of-mass trail"></canvas>
+          </div>
+          <p class="caption">The orange dot's angle chooses hue; its distance chooses intensity.</p>
+        </section>
+
+        <section class="panel color-panel" aria-labelledby="color-title">
+          <h2 id="color-title">Color output</h2>
+          <div id="color-swatch" class="color-swatch" role="img" aria-label="Current center-of-mass color"></div>
+          <div class="canvas-frame color-frame">
+            <canvas id="hsv-canvas" role="img" aria-label="HSV color wheel with the current center-of-mass position"></canvas>
+          </div>
+          <dl class="readouts" id="readouts">
+            <div><dt>Hue</dt><dd id="hue-value">0°</dd></div>
+            <div><dt>Saturation</dt><dd id="saturation-value">0%</dd></div>
+            <div><dt>Brightness</dt><dd id="brightness-value">55%</dd></div>
+            <div><dt>Hex</dt><dd id="hex-value">#8c8c8c</dd></div>
+            <div><dt>Angular velocity</dt><dd id="velocity-value">0.000 rad/s</dd></div>
+            <div><dt>Total water</dt><dd id="water-value">0.000 units</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel controls-panel" aria-labelledby="controls-title">
+          <h2 id="controls-title">Controls</h2>
+          <form id="controls">
+            <label>
+              <span>Buckets <output id="bucket-output" for="bucket-input">16</output></span>
+              <input id="bucket-input" name="bucketCount" type="range" min="8" max="32" step="1" value="16">
+            </label>
+            <label>
+              <span>Inflow <output id="inflow-output" for="inflow-input">8.00</output></span>
+              <input id="inflow-input" name="inflowRate" type="range" min="1" max="8" step="0.01" value="8">
+            </label>
+            <label>
+              <span>Leak <output id="leak-output" for="leak-input">0.05</output></span>
+              <input id="leak-input" name="leakRate" type="range" min="0.01" max="0.5" step="0.01" value="0.05">
+            </label>
+            <label>
+              <span>Damping <output id="damping-output" for="damping-input">1.00</output></span>
+              <input id="damping-input" name="damping" type="range" min="0.1" max="1.5" step="0.01" value="1">
+            </label>
+            <label>
+              <span>Torque <output id="torque-output" for="torque-input">6.00</output></span>
+              <input id="torque-input" name="torqueScale" type="range" min="0.5" max="8" step="0.05" value="6">
+            </label>
+            <label>
+              <span>Speed <output id="speed-output" for="speed-input">1.00×</output></span>
+              <input id="speed-input" name="speed" type="range" min="0.25" max="2" step="0.05" value="1">
+            </label>
+            <label class="checkbox-row">
+              <input id="trail-input" type="checkbox" checked>
+              <span>Show center-of-mass trail</span>
+            </label>
+            <button id="randomize" type="button">Randomize</button>
+          </form>
+        </section>
+      </main>
+
+      <footer>
+        <p>Inspired by James Munns and Matt Henderson’s chaotic water wheel demonstration.</p>
+      </footer>
+      <p id="live-status" class="visually-hidden" role="status" aria-live="polite"></p>
+    </div>
+  </body>
+</html>

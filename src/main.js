@@ -15,7 +15,11 @@ const controlsForm = document.querySelector("#controls");
 const trailInput = document.querySelector("#trail-input");
 const colorSwatch = document.querySelector("#color-swatch");
 const liveStatus = document.querySelector("#live-status");
-const outputs = new Map([...document.querySelectorAll("output")].map((output) => [output.htmlFor, output]));
+const outputs = new Map(
+  [...document.querySelectorAll("output")].map((output) => [output.getAttribute("for"), output]),
+);
+const hsvBaseCanvas = document.createElement("canvas");
+let hsvBaseKey = "";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const wheel = new WaterWheel();
@@ -34,7 +38,7 @@ togglePlayButton.textContent = state.running ? "Pause" : "Play";
 
 function resizeCanvas(canvas) {
   const rectangle = canvas.getBoundingClientRect();
-  const scale = Math.max(1, window.devicePixelRatio || 1);
+  const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   const width = Math.max(1, Math.round(rectangle.width * scale));
   const height = Math.max(1, Math.round(rectangle.height * scale));
   if (canvas.width !== width || canvas.height !== height) {
@@ -151,6 +155,31 @@ function drawWheel(center, color) {
 function drawHsvWheel(center, color) {
   const { context, width, height, centerX, centerY } = prepareCanvas(hsvCanvas);
   const radius = Math.min(width, height) * 0.42;
+  const baseKey = `${width}x${height}`;
+  if (hsvBaseKey !== baseKey) {
+    hsvBaseCanvas.width = width;
+    hsvBaseCanvas.height = height;
+    const baseContext = hsvBaseCanvas.getContext("2d");
+    drawHsvBase(baseContext, centerX, centerY, radius);
+    hsvBaseKey = baseKey;
+  }
+
+  context.drawImage(hsvBaseCanvas, 0, 0);
+
+  const markerRadius = radius * Math.max(0.055, color.saturation);
+  const markerX = centerX + Math.cos((color.hue * Math.PI) / 180) * markerRadius;
+  const markerY = centerY - Math.sin((color.hue * Math.PI) / 180) * markerRadius;
+  const markerSize = Math.max(5, radius * 0.055);
+  context.beginPath();
+  context.arc(markerX, markerY, markerSize, 0, Math.PI * 2);
+  context.fillStyle = rgbToCss(color.rgb);
+  context.fill();
+  context.strokeStyle = "#fff";
+  context.lineWidth = Math.max(1.5, radius * 0.008);
+  context.stroke();
+}
+
+function drawHsvBase(context, centerX, centerY, radius) {
   const hueGradient = context.createConicGradient(0, centerX, centerY);
   for (let angle = 0; angle <= 360; angle += 30) {
     hueGradient.addColorStop(angle / 360, rgbToCss(hsvToRgb({ hue: angle, saturation: 1, value: 1 })));
@@ -176,18 +205,6 @@ function drawHsvWheel(center, color) {
     context.arc(centerX, centerY, radius * guide, 0, Math.PI * 2);
     context.stroke();
   }
-
-  const markerRadius = radius * Math.max(0.055, color.saturation);
-  const markerX = centerX + Math.cos((color.hue * Math.PI) / 180) * markerRadius;
-  const markerY = centerY - Math.sin((color.hue * Math.PI) / 180) * markerRadius;
-  const markerSize = Math.max(5, radius * 0.055);
-  context.beginPath();
-  context.arc(markerX, markerY, markerSize, 0, Math.PI * 2);
-  context.fillStyle = rgbToCss(color.rgb);
-  context.fill();
-  context.strokeStyle = "#fff";
-  context.lineWidth = Math.max(1.5, radius * 0.008);
-  context.stroke();
 }
 
 function formatPercent(value) {
@@ -226,14 +243,14 @@ function render(now = performance.now()) {
 }
 
 function simulationStep() {
-  wheel.step({ speed: state.speed });
+  wheel.step();
   recordTrail(wheel.normalizedCenterOfMass());
 }
 
 function frame(now) {
   const elapsed = Math.min(0.25, Math.max(0, (now - state.lastFrameTime) / 1000));
   state.lastFrameTime = now;
-  state.accumulator += elapsed;
+  state.accumulator += elapsed * state.speed;
 
   let steps = 0;
   while (state.accumulator >= wheel.dt && steps < 8) {
@@ -265,15 +282,16 @@ function resetSimulation() {
 }
 
 function randomizeParameters() {
+  const nextBucketCount = 10 + Math.floor(Math.random() * 23);
   const parameters = {
-    bucketCount: 10 + Math.floor(Math.random() * 23),
     inflowRate: 3 + Math.random() * 5,
     leakRate: 0.02 + Math.random() * 0.1,
     damping: 0.65 + Math.random() * 0.6,
     torqueScale: 4 + Math.random() * 3.5,
   };
   Object.assign(wheel, parameters);
-  controlsForm.bucketCount.value = parameters.bucketCount;
+  wheel.setBucketCount(nextBucketCount);
+  controlsForm.bucketCount.value = nextBucketCount;
   controlsForm.inflowRate.value = parameters.inflowRate;
   controlsForm.leakRate.value = parameters.leakRate;
   controlsForm.damping.value = parameters.damping;
@@ -325,6 +343,8 @@ window.addEventListener("keydown", (event) => {
   } else if (event.key.toLowerCase() === "r") {
     resetSimulation();
   } else if (event.key.toLowerCase() === "s") {
+    state.running = false;
+    updatePlayButton();
     simulationStep();
     render();
   } else if (event.key.toLowerCase() === "t") {

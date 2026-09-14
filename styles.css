@@ -196,6 +196,7 @@ input[type="range"] {
 }
 
 .checkbox-row {
+  min-height: 44px;
   grid-template-columns: auto 1fr;
   align-items: center;
 }

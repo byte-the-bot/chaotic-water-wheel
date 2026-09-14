@@ -28,7 +28,7 @@ jobs:
         run: npm test
       - name: Stage static site
         run: |
-          mkdir publish/src
+          mkdir -p publish/src
           cp index.html styles.css favicon.svg .nojekyll publish/
           cp src/*.js publish/src/
       - name: Setup Pages

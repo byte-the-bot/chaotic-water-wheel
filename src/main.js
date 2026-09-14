@@ -167,8 +167,9 @@ function drawHsvWheel(center, color) {
   context.drawImage(hsvBaseCanvas, 0, 0);
 
   const markerRadius = radius * Math.max(0.055, color.saturation);
-  const markerX = centerX + Math.cos((color.hue * Math.PI) / 180) * markerRadius;
-  const markerY = centerY - Math.sin((color.hue * Math.PI) / 180) * markerRadius;
+  const markerAngle = (color.hue * Math.PI) / 180;
+  const markerX = centerX + Math.sin(markerAngle) * markerRadius;
+  const markerY = centerY - Math.cos(markerAngle) * markerRadius;
   const markerSize = Math.max(5, radius * 0.055);
   context.beginPath();
   context.arc(markerX, markerY, markerSize, 0, Math.PI * 2);
@@ -180,7 +181,7 @@ function drawHsvWheel(center, color) {
 }
 
 function drawHsvBase(context, centerX, centerY, radius) {
-  const hueGradient = context.createConicGradient(0, centerX, centerY);
+  const hueGradient = context.createConicGradient(-Math.PI / 2, centerX, centerY);
   for (let angle = 0; angle <= 360; angle += 30) {
     hueGradient.addColorStop(angle / 360, rgbToCss(hsvToRgb({ hue: angle, saturation: 1, value: 1 })));
   }
@@ -284,10 +285,10 @@ function resetSimulation() {
 function randomizeParameters() {
   const nextBucketCount = 10 + Math.floor(Math.random() * 23);
   const parameters = {
-    inflowRate: 3 + Math.random() * 5,
-    leakRate: 0.02 + Math.random() * 0.1,
-    damping: 0.65 + Math.random() * 0.6,
-    torqueScale: 4 + Math.random() * 3.5,
+    inflowRate: 1 + Math.random() * 2,
+    leakRate: 0.05 + Math.random() * 0.1,
+    damping: 0.4 + Math.random() * 0.4,
+    torqueScale: 5 + Math.random() * 3,
   };
   Object.assign(wheel, parameters);
   wheel.setBucketCount(nextBucketCount);

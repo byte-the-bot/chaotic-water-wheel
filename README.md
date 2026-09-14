@@ -7,7 +7,7 @@ projection of the Lorenz attractor.
 
 The center of mass also drives an HSV color:
 
-- hue is its angle around the wheel,
+- hue is its clockwise angle from the top of the wheel,
 - saturation is its normalized distance from the center,
 - brightness rises from 55% at the center to 100% at the rim.
 

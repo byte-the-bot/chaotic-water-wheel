@@ -28,6 +28,33 @@ test("the default model is finite and produces reversals", () => {
   assert.ok(reversals >= 2, `expected reversals, got ${reversals}`);
 });
 
+test("gravity pulls an offset mass toward the bottom", () => {
+  const wheel = new WaterWheel({
+    seed: 0.5,
+    inflowRate: 0,
+    leakRate: 0,
+    damping: 0,
+    torqueScale: 1,
+  });
+  wheel.bucketVolumes.fill(0);
+  wheel.bucketAngles[0] = 0;
+  wheel.bucketVolumes[0] = 1;
+  wheel.step();
+  assert.ok(wheel.angularVelocity < 0);
+});
+
+test("changing bucket count preserves mass and phase", () => {
+  const wheel = new WaterWheel({ seed: 0.5 });
+  wheel.bucketVolumes.fill(1);
+  const phase = wheel.bucketAngles[0];
+  wheel.setBucketCount(24);
+  const total = wheel.bucketVolumes.reduce((sum, volume) => sum + volume, 0);
+  assert.equal(total, 16);
+  assert.equal(wheel.bucketAngles[0], phase);
+  wheel.setBucketCount(8);
+  assert.equal(wheel.bucketVolumes.reduce((sum, volume) => sum + volume, 0), 16);
+});
+
 test("step is deterministic for a fixed seed", () => {
   const run = () => {
     const wheel = new WaterWheel({ seed: 0.91 });

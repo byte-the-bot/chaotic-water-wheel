@@ -1,15 +1,15 @@
 export const DEFAULT_WHEEL_PARAMETERS = Object.freeze({
   bucketCount: 16,
-  inflowRate: 8,
-  leakRate: 0.05,
-  damping: 1,
-  torqueScale: 6,
+  inflowRate: 2,
+  leakRate: 0.1,
+  damping: 0.5,
+  torqueScale: 7.5,
   bucketCapacity: 2.25,
   dt: 1 / 120,
 });
 
 const TWO_PI = 2 * Math.PI;
-const TOP_ANGLE = -Math.PI / 2;
+const TOP_ANGLE = Math.PI / 2;
 
 function randomDecimal() {
   return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
@@ -73,15 +73,30 @@ export class WaterWheel {
 
     const oldAngles = this.bucketAngles;
     const oldVolumes = this.bucketVolumes;
-    this.bucketCount = count;
-    this.bucketAngles = new Float64Array(count);
-    this.bucketVolumes = new Float64Array(count);
+    const newAngles = new Float64Array(count);
+    const newVolumes = new Float64Array(count);
+    const phase = oldAngles[0];
 
     for (let index = 0; index < count; index += 1) {
-      const source = Math.min(index, oldAngles.length - 1);
-      this.bucketAngles[index] = TOP_ANGLE + (index * TWO_PI) / count;
-      this.bucketVolumes[index] = oldVolumes[source] ?? 0;
+      newAngles[index] = normalizeAngle(phase + (index * TWO_PI) / count);
     }
+
+    for (let oldIndex = 0; oldIndex < oldVolumes.length; oldIndex += 1) {
+      let nearest = 0;
+      let nearestDifference = Infinity;
+      for (let newIndex = 0; newIndex < count; newIndex += 1) {
+        const difference = Math.abs(angleDifference(oldAngles[oldIndex], newAngles[newIndex]));
+        if (difference < nearestDifference) {
+          nearest = newIndex;
+          nearestDifference = difference;
+        }
+      }
+      newVolumes[nearest] += oldVolumes[oldIndex];
+    }
+
+    this.bucketCount = count;
+    this.bucketAngles = newAngles;
+    this.bucketVolumes = newVolumes;
   }
 
   centerOfMass() {
@@ -133,7 +148,7 @@ export class WaterWheel {
 
     let torque = 0;
     for (let index = 0; index < this.bucketCount; index += 1) {
-      torque -= this.torqueScale * this.bucketVolumes[index] * Math.sin(this.bucketAngles[index]);
+      torque -= this.torqueScale * this.bucketVolumes[index] * Math.cos(this.bucketAngles[index]);
     }
 
     this.angularVelocity += (torque - this.damping * this.angularVelocity) * dt;

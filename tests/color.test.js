@@ -10,11 +10,15 @@ test("HSV conversion handles the primary and secondary colors", () => {
 });
 
 test("the center of mass maps angle and radius to HSV", () => {
-  const red = colorFromCenterOfMass({ angle: 0, normalizedRadius: 1 });
-  assert.equal(red.hue, 0);
-  assert.equal(red.saturation, 1);
-  assert.equal(red.value, 1);
-  assert.deepEqual(red.rgb, { red: 255, green: 0, blue: 0 });
+  const topRed = colorFromCenterOfMass({ angle: Math.PI / 2, normalizedRadius: 1 });
+  assert.equal(topRed.hue, 0);
+  assert.equal(topRed.saturation, 1);
+  assert.equal(topRed.value, 1);
+  assert.deepEqual(topRed.rgb, { red: 255, green: 0, blue: 0 });
+
+  const rightGreen = colorFromCenterOfMass({ angle: 0, normalizedRadius: 1 });
+  assert.equal(rightGreen.hue, 90);
+  assert.deepEqual(rightGreen.rgb, { red: 128, green: 255, blue: 0 });
 
   const dimGray = colorFromCenterOfMass({ angle: 42, normalizedRadius: 0 });
   assert.equal(dimGray.saturation, 0);

@@ -39,7 +39,7 @@ export function rgbToHex({ red, green, blue }) {
 }
 
 export function colorFromCenterOfMass(center) {
-  const hue = ((center.angle * 180) / Math.PI + 360) % 360;
+  const hue = ((90 - (center.angle * 180) / Math.PI) % 360 + 360) % 360;
   const saturation = clamp01(center.normalizedRadius);
   const value = 0.55 + 0.45 * saturation;
   return {
